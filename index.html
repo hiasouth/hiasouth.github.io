@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyowon Shim</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Lora:ital,wght@0,400;1,400;1,600&family=Noto+Sans+KR:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0a0a0a;--white:#fafafa;
+  --gray1:#1c1c1c;--gray2:#3a3a3a;--gray3:#7a7a7a;
+  --gray4:#b8b8b8;--gray5:#e4e4e4;--gray6:#f2f2f2;
+  --sans:'DM Sans',sans-serif;
+  --serif:'Lora',Georgia,serif;
+  --kr:'Noto Sans KR',sans-serif;
+  --mono:'Space Mono',monospace;
+  --border:1px solid var(--gray5);
+  --sidebar:280px;
+  --green:#4ade80;
+}
+html,body{height:100%;background:var(--white);color:var(--black);font-family:var(--serif)}
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;background:var(--white);overflow-y:auto;position:relative;z-index:10}
+.sb-logo{padding:2.5rem 2rem 1.75rem;}
+.sb-name{font-family:var(--kr);font-weight:400;font-size:13px;color:var(--gray3);line-height:1.6;background:linear-gradient(transparent 40%,rgba(74,222,128,.35) 40%);display:inline}
+.sb-role{font-family:var(--serif);font-style:italic;font-size:11px;color:var(--gray3);margin-top:.75rem;line-height:1.8}
+.sb-nav{padding:.5rem 0}
+.sb-navbtn{display:flex;align-items:center;gap:.5rem;width:100%;background:none;border:none;cursor:pointer;padding:.6rem 2rem;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray3);transition:color .15s,background .15s}
+.sb-navbtn:hover{color:var(--black);background:var(--gray6)}
+.sb-navbtn.active{color:var(--black);font-weight:700}
+.new-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;display:none}
+.new-dot.visible{display:block}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 3rem;;height:52px;flex-shrink:0}
+.topbar-title{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray3)}
+.btn-new{background:var(--black);color:var(--white);border:none;padding:.45rem 1rem;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;transition:opacity .2s}
+.btn-new:hover{opacity:.7}
+.btn-new.hidden{visibility:hidden}
+.pages{flex:1;position:relative;overflow:hidden}
+.page{position:absolute;inset:0;overflow-y:auto;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .2s;padding:3rem}
+.page.active{opacity:1;pointer-events:all;visibility:visible}
+.home-hero{max-width:600px;margin-bottom:3rem;padding-bottom:2.5rem;}
+.hero-kicker{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gray3);margin-bottom:1.25rem}
+.hero-headline{font-family:var(--serif);font-size:38px;font-weight:400;line-height:1.15;color:var(--black);margin-bottom:1.5rem}
+.hero-headline em{font-style:italic;font-weight:600}
+.hero-body{font-family:var(--kr);font-size:13.5px;line-height:2.05;color:var(--gray2);max-width:520px}
+.board-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;max-width:780px}
+.board-title{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--black)}
+.board-title em{font-style:italic;font-weight:600}
+.back-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray3);padding:0;margin-bottom:2.5rem;display:flex;align-items:center;gap:.5rem;transition:color .15s}
+.back-btn:hover{color:var(--black)}
+.pv-meta{font-family:var(--mono);font-size:9px;color:var(--gray3);letter-spacing:.08em;margin-bottom:.9rem}
+.pv-title{font-family:var(--sans);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.25;margin-bottom:2.5rem;max-width:620px;color:#3a3a3a}
+.pv-divider{height:1px;background:var(--gray5);margin-bottom:2.5rem;max-width:620px}
+.pv-body{font-family:var(--kr);font-size:15px;line-height:1.5;color:#4a4a4a;max-width:580px;white-space:pre-wrap}
+.pv-actions{margin-top:3rem;padding-top:1.75rem;display:flex;gap:.75rem;max-width:580px}
+.btn-del{background:none;border:1px solid var(--gray5);padding:.45rem 1rem;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray3);cursor:pointer;transition:border-color .15s,color .15s}
+.btn-del:hover{border-color:var(--gray2);color:var(--black)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,10,10,.6);align-items:center;justify-content:center;z-index:200;padding:2rem}
+.overlay.show{display:flex}
+.modal{background:var(--white);width:min(640px,100%);border:var(--border);padding:2.5rem;max-height:90vh;overflow-y:auto}
+.modal-hd{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray3);margin-bottom:1.75rem;padding-bottom:.75rem;}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray3);margin-bottom:.45rem}
+.field input,.field textarea{width:100%;background:var(--gray6);border:var(--border);padding:.7rem .9rem;font-family:var(--kr);font-size:13px;color:var(--black);outline:none;transition:border-color .15s;resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--gray2)}
+.field textarea{min-height:200px;line-height:1.9}
+.char-count{font-family:var(--mono);font-size:9px;color:var(--gray4);text-align:right;margin-top:.3rem}
+.modal-foot{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem}
+.btn-cancel{background:none;border:1px solid var(--gray5);padding:.5rem 1.1rem;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray3);transition:border-color .15s}
+.btn-cancel:hover{border-color:var(--gray3)}
+.btn-save{background:var(--black);color:var(--white);border:none;padding:.5rem 1.4rem;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;transition:opacity .15s}
+.btn-save:hover{opacity:.75}
+.cv-wrap-full{max-width:680px}
+.cv-page-title{font-family:var(--sans);font-size:26px;font-weight:500;letter-spacing:-.02em;margin-bottom:.4rem}
+.cv-page-sub{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray3);margin-bottom:2.5rem}
+.cv-block{margin-bottom:2.5rem;padding-bottom:2.5rem;}
+
+.cv-block-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray3);margin-bottom:1rem}
+.cv-block-body{font-family:var(--kr);font-size:13.5px;line-height:2;color:var(--gray1)}
+.pub-item{margin-bottom:1.1rem;padding-left:1rem;border-left:2px solid var(--gray5)}
+.pub-item-title{font-family:var(--sans);font-size:12.5px;font-weight:500;line-height:1.5;color:var(--black);margin-bottom:.2rem}
+.pub-item-title a{color:inherit;text-decoration:none;border-bottom:1px solid var(--gray5);transition:border-color .15s}
+.pub-item-title a:hover{border-color:var(--gray3)}
+.pub-item-meta{font-family:var(--mono);font-size:9px;color:var(--gray3);line-height:1.6}
+.pres-item{margin-bottom:.9rem}
+.pres-item-title{font-family:var(--sans);font-size:12.5px;font-weight:500;line-height:1.5;color:var(--black)}
+.pres-item-meta{font-family:var(--mono);font-size:9px;color:var(--gray3)}
+.sub-label{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray4);margin:.9rem 0 .5rem}
+.empty{text-align:center;padding:5rem 0;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray4)}
+
+/* ── Bits & Pieces 카드 목록 ── */
+.bp-list{display:flex;flex-direction:column;gap:0;max-width:780px}
+.bp-card{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start;padding:1.1rem 0;border-bottom:var(--border);cursor:pointer;transition:background .15s}
+.bp-card:hover{background:var(--gray6);margin:0 -1rem;padding-left:1rem;padding-right:1rem}
+.bp-num{font-family:var(--mono);font-size:9px;color:var(--gray4);padding-top:.2rem}
+.bp-info{}
+.bp-title{font-family:var(--sans);font-size:13.5px;font-weight:500;color:var(--black);margin-bottom:.25rem;line-height:1.4}
+.bp-cat{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray3);margin-left:.5rem;font-weight:400}
+.bp-excerpt{font-family:var(--kr);font-size:12px;color:var(--gray3);line-height:1.7;max-width:520px}
+.bp-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0;opacity:.85}
+.bp-date{font-family:var(--mono);font-size:9px;color:var(--gray4);white-space:nowrap;padding-top:.2rem}
+
+/* ── 게시물 본문 ── */
+.pv-body p{margin:0 0 0.6em 0;font-family:var(--kr);font-size:15px;line-height:1.5;color:#4a4a4a}
+.pv-body ul,.pv-body ol{margin:0 0 0.6em 1.5em;padding:0}
+.pv-body li{margin-bottom:0.3em;font-family:var(--kr);font-size:15px;line-height:1.5;color:#4a4a4a}
+.pv-body li+li{margin-top:0}
+.pv-body h1,.pv-body h2,.pv-body h3{font-family:var(--sans);font-weight:500;margin:2em 0 .75em;color:#3a3a3a}
+.pv-body h1{font-size:18px}.pv-body h2{font-size:15px}.pv-body h3{font-size:13px}
+.pv-body blockquote{border-left:2px solid var(--gray4);padding-left:1.2rem;color:var(--gray3);margin:1.5em 0;font-style:italic}
+.pv-body hr{border:none;border-top:var(--border);margin:2em 0}
+.pv-body figure{margin:2em 0}
+.pv-body figure img{max-width:100%;display:block}
+.pv-body img{max-width:100%;height:auto;display:block}
+.pv-body figcaption{font-family:var(--mono);font-size:9px;color:var(--gray3);margin-top:.5rem}
+.pv-body a{color:inherit;border-bottom:1px solid var(--gray4)}
+.pv-body strong{font-weight:600}
+.pv-cover{max-width:500px;max-height:650px;width:auto;height:auto;display:block;margin-bottom:2.5rem}
+.pv-nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding:1.25rem 0;border-top:var(--border);border-bottom:var(--border);max-width:580px}
+.pv-nav-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray2);padding:.5rem 0;transition:color .15s;display:flex;align-items:center;gap:.4rem}
+.pv-nav-btn:hover{color:var(--black)}
+.pv-nav-btn:disabled{opacity:.25;cursor:default}
+.pv-nav-label{font-family:var(--sans);font-size:11px;font-weight:500;color:inherit;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bp-loading{font-family:var(--mono);font-size:9px;color:var(--gray4);letter-spacing:.1em;text-transform:uppercase;padding:3rem 0}
+
+/* ── 홈 랜덤 이미지 ── */
+.home-photos{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.home-photo-item{cursor:pointer;overflow:hidden}
+.home-photo-item img{max-width:500px;max-height:650px;width:auto;height:auto;display:block;transition:opacity .2s}
+.home-photo-item:hover img{opacity:.85}
+.home-photo-caption{display:none}
+
+/* ── 모바일 ── */
+@media(max-width:640px){
+  .shell{flex-direction:column;height:auto;min-height:100vh}
+  .sidebar{width:100%;flex-direction:column;overflow:visible}
+  .sb-logo{padding:1.5rem 1.25rem 1rem}
+  .sb-nav{display:flex;flex-direction:row;padding:.25rem .5rem;overflow-x:auto;gap:.25rem}
+  .sb-navbtn{width:auto;padding:.5rem .9rem;font-size:9px;white-space:nowrap}
+  .main{overflow:visible}
+  .pages{position:static;overflow:visible;height:auto}
+  .page{position:static;opacity:1;pointer-events:all;visibility:visible;display:none;padding:1.5rem 1.25rem}
+  .page.active{display:block}
+  .cv-wrap-full{max-width:100%}
+  .board-row{grid-template-columns:28px 1fr;gap:.75rem}
+  .brow-date{display:none}
+  .brow-excerpt{max-width:100%}
+  .pv-title{font-size:22px}
+  .pv-body{font-size:14px}
+
+  /* ── 모바일 이미지 최적화 ── */
+  .home-photos{position:static;padding:0;display:block}
+  .page#page-home{padding:0}
+  .home-photo-item{width:100%;display:block;overflow:hidden}
+  .home-photo-item img{width:100%;max-width:100%;max-height:70vh;height:auto;object-fit:cover;display:block}
+  /* 게시물 커버 */
+  .pv-cover{max-width:100%;width:100%;max-height:60vh;object-fit:cover}
+  /* 본문 삽입 이미지 — 패딩 무시하고 꽉 채우기 */
+  .pv-body figure{margin:1.5em -1.25rem}
+  .pv-body figure img{max-width:100%;width:100%;height:auto}
+  .pv-body figcaption{padding:0 1.25rem}
+  /* 본문/네비 너비 넘침 방지 */
+  .pv-body{max-width:100%;overflow-x:hidden}
+  .pv-nav{max-width:100%}
+  .pv-divider{max-width:100%}
+  .bp-thumb{width:44px;height:44px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <span class="sb-name">심효원 · Hyowon Shim</span>
+      <div class="sb-role">Research-based writing, translation,<br>and transdisciplinary practices</div>
+    </div>
+    <nav class="sb-nav">
+      <button class="sb-navbtn active" id="btn-nav-home">Home</button>
+      <button class="sb-navbtn" id="btn-nav-essays"><em style="font-style:italic">Bits &amp; Pieces</em> (Field Notes)<span class="new-dot" id="nav-new-dot"></span></button>
+      <button class="sb-navbtn" id="btn-nav-cv">CV</button>
+      <button class="sb-navbtn" id="btn-nav-contact">Contact</button>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <div class="pages">
+
+      <!-- HOME -->
+      <div class="page" id="page-home">
+        <div id="home-photos" class="home-photos"></div>
+      </div>
+
+      <!-- BITS & PIECES -->
+      <div class="page" id="page-essays">
+        <div id="bp-loading" class="bp-loading">Loading...</div>
+        <div id="board-list" class="bp-list"></div>
+        <div style="margin-top:4rem;padding-top:1.5rem;font-family:var(--mono);font-size:8px;color:var(--gray4);letter-spacing:.04em;line-height:1.8;max-width:780px">
+          &copy; 2026 Hyowon Shim (Hia South). All rights reserved.
+        </div>
+      </div>
+
+      <!-- POST VIEW -->
+      <div class="page" id="page-post">
+        <button class="back-btn" id="post-back-btn">← Back</button>
+        <div class="pv-meta" id="pv-meta"></div>
+        <div class="pv-title" id="pv-title"></div>
+        <img class="pv-cover" id="pv-cover" src="" alt="" loading="lazy" style="display:none">
+        <div class="pv-divider"></div>
+        <div class="pv-body" id="pv-body"><div class="bp-loading">Loading...</div></div>
+        <nav class="pv-nav" id="pv-nav">
+          <button class="pv-nav-btn" id="btn-prev">← Next</button>
+          <button class="pv-nav-btn" id="btn-next">Prev →</button>
+        </nav>
+      </div>
+
+      <!-- CV -->
+      <div class="page active" id="page-cv">
+        <div class="cv-wrap-full">
+          <div class="cv-page-title">Hyowon Shim</div>
+          <div class="cv-page-sub">Curriculum Vitae</div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Statement</div>
+            <div class="cv-block-body">I am a media studies researcher and experimental writer based in Seoul, working across media ecology and posthumanities, with a doctorate in Comparative Literature. My practice lies at the intersection of the conceptual and the sensorial, where writing becomes a medium for weaving embodied thought and speculative resonance.<br><br>My work engages with transdisciplinary inquiry and corporeal attention as core research methods, drawing from both contemporary media studies and the lived textures of situated East Asian sensibilities.</div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Affiliation</div>
+            <div class="cv-block-body">
+              <div class="pub-item"><div class="pub-item-title">Research Professor, Institute of Media Arts</div><div class="pub-item-meta">Yonsei University, South Korea</div></div>
+              <div class="pub-item"><div class="pub-item-title">Lecturer</div><div class="pub-item-meta">Korea National University of Arts / Yonsei Graduate School</div></div>
+            </div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Research Grants &amp; Honors</div>
+            <div class="cv-block-body">
+              <div class="pub-item"><div class="pub-item-title">Ethics of Hands in Contemporary Art Practice</div><div class="pub-item-meta">Culture &amp; Art Research Grant, AmorePacific Foundation, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title">The Anthropocene and Visuality: Theories and Practices of Virtual Reality</div><div class="pub-item-meta">Research Professor Fellowship (A), NRF Korea, 2021–26</div></div>
+              <div class="pub-item"><div class="pub-item-title">New Media Materialism of Rare Earths and E-waste</div><div class="pub-item-meta">Postdoctoral Fellowship, NRF Korea, 2019–20</div></div>
+            </div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Journal Articles</div>
+            <div class="cv-block-body">
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003223000" target="_blank">"Critical" Semiophagy: The Cases of Jesus, Indigenous People, and Plants</a></div><div class="pub-item-meta">Comparative Literature, vol.96, Korea Comparative Literature Association, pp.429–458, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003151552" target="_blank">Virtual Images of Plants: Contemporary Theory and Art Practices</a></div><div class="pub-item-meta">Visual Culture, no.45, Korean Association For Visual Culture, pp.99–126, 2024</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002973818" target="_blank">The Collective Act of Smelling</a></div><div class="pub-item-meta">Comparative Literature, vol.80, no.90, pp.155–180, 2023</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002913831" target="_blank">Exploring the Fissures in Virtual Worlds</a></div><div class="pub-item-meta">The Journal of East-West Comparative Literature, vol.62, pp.293–314, 2022</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002795649" target="_blank">Meanings of the Role of Actors in Louis and August Lumière's Films</a></div><div class="pub-item-meta">The Journal of East-West Comparative Literature, vol.58, pp.151–172, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002760365" target="_blank">Media Materialism of Rare Earths and E-wastes: Focusing on Parikka's Concept of "Medianatures"</a></div><div class="pub-item-meta">Literature and Film, vol.22, no.2, pp.551–578, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002783762" target="_blank">Media Studies as a Meta-discipline</a></div><div class="pub-item-meta">Korean Art Research, no.34, pp.309–318, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002753872" target="_blank">(In)visuality of the Anthropocene: Exploring the concept of Umwelt and its application to In the Eyes of the Animal</a></div><div class="pub-item-meta">Korean Art Research, no.33, pp.51–74, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002776309" target="_blank">Mid to Long Term Implementation and Development Plans for the 'Regional Project of Gifted Education in Arts'</a></div><div class="pub-item-meta">Gifted in Arts, vol.3, no.1(5), pp.47–70, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002693960" target="_blank">The Concept of Touch and Brain in Nam June Paik and Roy Ascott's Network Arts in the 1980s</a></div><div class="pub-item-meta">Journal of Korean Society of Media and Arts (Contents Plus), vol.19, no.1, pp.59–71, 2021</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002635400" target="_blank">Chronophotography and its Transformation of Reality: Comparison of Marey's Photography and Descartes's Theory of Vision</a></div><div class="pub-item-meta">The Journal of East-West Comparative Literature, vol.53, pp.223–246, 2020</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002572689" target="_blank">On Marshall McLuhan's Media Theory and the Concept of World Cinema in 1960-70s</a></div><div class="pub-item-meta">The Journal of East-West Comparative Literature, vol.51, pp.217–239, 2020</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002561222" target="_blank">Anthropocene and 21st-Century Interdisciplinary Approaches: Focusing on Chakrabarty, Parikka and Haraway</a></div><div class="pub-item-meta">Comparative Literature, vol.80, pp.237–266, 2020</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART002466939" target="_blank">Reconsideration of Kittler's Concept of the filmic doppelgänger: Focusing on the early film Frankenstein</a></div><div class="pub-item-meta">Contemporary Film Studies, vol.15, no.2, pp.63–84, 2019</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002398978" target="_blank">Irregularity of Chaplin's Motions: A Case of 20th Century Posthuman</a></div><div class="pub-item-meta">Comparative Literature, vol.76, pp.121–151, 2018</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002318356" target="_blank">Cinema as a Modern Factory: Fordism in the Technology, Production, and Distribution of Films</a></div><div class="pub-item-meta">Contemporary Film Studies, vol.14, no.1, pp.53–81, 2018</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002241349" target="_blank">Film Media as the Future Automata: An Analysis of L'Ève future by Auguste Villiers de L'Isle-Adam</a></div><div class="pub-item-meta">Comparative Literature, vol.72, pp.157–188, 2017</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002203278" target="_blank">A Mirror Image of the Screen Actor: Analyzing Multilayered Character of Rudolph Valentino</a></div><div class="pub-item-meta">Journal of Korean Society of Media and Arts (Contents Plus), vol.15, no.2, pp.5–21, 2017</div></div>
+            </div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Books</div>
+            <div class="cv-block-body">
+              <div class="sub-label">Author</div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=377714350" target="_blank"><em>Jussi Parikka</em></a></div><div class="pub-item-meta">Combooks, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title">"Deep Matter: Gazing into the Abyss" in <a href="https://www.arko.or.kr/artcenter/synap/skin/doc.html?fn=NzE2MzUyXzIwMjUwNzAyMDk1MDM2OTgwMA.pdf&rs=/artcenter/synap/result/52/" target="_blank"><em>Minibus, Oort Cloud, Fluttering Pages</em></a></div><div class="pub-item-meta">Arts Council Korea, ARKO Art Center, 2025 (English version)</div></div>
+              <div class="pub-item"><div class="pub-item-title">"Becoming Earthworms, making the Soft Architecture" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337624624" target="_blank"><em>Sseulm</em></a> vol.19</div><div class="pub-item-meta">문학실험실(Literature Laboratory), 2024</div></div>
+              <div class="pub-item"><div class="pub-item-title">"Our Sentiment for Nature and Future" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=336030696" target="_blank"><em>Ecology in Latent Space: Disasters, Generative Neural Networks, and the Non-Futures</em></a></div><div class="pub-item-meta">Ed. Unmakelab, Mediabus, 2024</div></div>
+              <div class="pub-item"><div class="pub-item-title">"Media History / History of Media Theory" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292705686" target="_blank"><em>Intersection Vol 2: The life of Materials</em></a></div><div class="pub-item-meta">Itta, 2022</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=239399251" target="_blank"><em>The Frontiers in 21st Century Thoughts</em></a></div><div class="pub-item-meta">2sens, 2020 (co-author)</div></div>
+              <div class="sub-label">Translation</div>
+              <div class="pub-item"><div class="pub-item-title">Parikka, Jussi. <em>What is Media Archaeology?</em></div><div class="pub-item-meta">Trans. Chancheol Jeong, Sujin Kwon, Goun Kim, Youngsuk Park, Hyowon Shim, and Insun Jeong. Hyunsilmunhwa, 2026 (co-translation)</div></div>
+              <div class="pub-item"><div class="pub-item-title">Jucan, Ioana B., Jussi Parikka, and Rebecca Schneider, <a href="https://commbooks.com/%EB%8F%84%EC%84%9C/%ec%9e%94%ec%97%ac/" target="_blank"><em>Remain</em></a></div><div class="pub-item-meta">Trans. Jiwon Yu and Hyowon Shim, Combooks, 2026 (co-translation)</div></div>
+              <div class="pub-item"><div class="pub-item-title">Parikka, Jussi. <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=366624898" target="_blank"><em>Geology of Media</em></a></div><div class="pub-item-meta">Hyunsilmunhwa, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title">Higonnet, Margaret R. "Comparative Literature on the Feminist Edge" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=296887248" target="_blank"><em>Bernheimer Report</em></a></div><div class="pub-item-meta">Purunsasang, 2022</div></div>
+              <div class="pub-item"><div class="pub-item-title">Demos, T.J. "Against the Anthropocene: Visual Culture and Environment Today" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=260790614" target="_blank"><em>Dear Amazon: On Anthropocene</em></a></div><div class="pub-item-meta">Ilmin Museum of Art and Hyunsilmunhwa</div></div>
+              <div class="pub-item"><div class="pub-item-title">Demos, T.J. "Blackout: The Necropolitics of Extraction" and "Worlds to Come" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254940418" target="_blank"><em>What Do Museums Change?: Art and Democracy</em></a></div><div class="pub-item-meta">Contemporary Art; Museum of Art, 2020</div></div>
+              <div class="pub-item"><div class="pub-item-title">Shanken, Edward A. "Deus ex Poiesis" and Parikka, Jussi. "Thousands of Tiny Futures" in <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169020562" target="_blank"><em>Embracing the Parallel Worlds</em></a></div><div class="pub-item-meta">Seoul Museum of Art and Hyunsilmunhwa, 2018</div></div>
+            </div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Exhibitions &amp; Practice-Based Works</div>
+            <div class="cv-block-body">
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.instagram.com/p/DJ0ardgSUwF/" target="_blank">"Dental Critics"</a> — Group Exhibition</div><div class="pub-item-meta">Wreath &amp; Towel, Seoul. May 24 – July 23, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://www.instagram.com/p/DIafqevJUyr/" target="_blank">"Text Pairing"</a> — Group Exhibition</div><div class="pub-item-meta">In the Paper, Seoul. March 27 – April 17, 2025</div></div>
+              <div class="pub-item"><div class="pub-item-title"><a href="https://unlimited-edition.org/" target="_blank">2024 Unlimited Edition</a> — Seoul Art Book Fair</div><div class="pub-item-meta">SeMA Buk-Seoul, November 15–17, 2024</div></div>
+              <div class="pub-item"><div class="pub-item-title">"Text Movement: A Field/Shelf of Flowing Knowledge"</div><div class="pub-item-meta">Wreath &amp; Towel, Seoul. July 19 – Dec 31, 2024</div></div>
+            </div>
+          </div>
+
+          <div class="cv-block">
+            <div class="cv-block-label">Selected Presentations</div>
+            <div class="cv-block-body">
+              <div class="sub-label">Conferences</div>
+              <div class="pres-item"><div class="pres-item-title">The Virtual World Fascinated by Plants</div><div class="pres-item-meta">2024 Fall Conference, Korea Association of Visual Culture. Seoul, June 2024</div></div>
+              <div class="pres-item"><div class="pres-item-title">Our Belief in Bodies Experiencing the Virtual World</div><div class="pres-item-meta">XXIII ICLA Congress, Tbilisi, Georgia (Hybrid), 2022</div></div>
+              <div class="pres-item"><div class="pres-item-title">Chronophotography and Its Transformation of Reality</div><div class="pres-item-meta">XXII ICLA Congress, University of Macau, 2019</div></div>
+              <div class="sub-label">Forums &amp; Invited Seminars</div>
+              <div class="pres-item"><div class="pres-item-title">Ethics of Hands: Recycling and Reconstruction in Contemporary Art Practices</div><div class="pres-item-meta">Non-human Agency Research Group Seminar, KIAS, October 2025</div></div>
+              <div class="pres-item"><div class="pres-item-title">Post-Anthropocentrism — Technical Media — Body Media</div><div class="pres-item-meta">Summer School of ALT Cinema &amp; Media Art Festival, August 2022</div></div>
+              <div class="pres-item"><div class="pres-item-title">“The User-Viewer at Web-based Museums in the Post-media Era.” the 12th edition of <em>Gift of Nam June Paik</em> symposium</div><div class="pres-item-meta">Nam June Paik Art Center, South Korea, 2020 </div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CONTACT -->
+      <div class="page" id="page-contact">
+        <div style="padding-top:1rem">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--gray3);margin-bottom:.5rem" id="contact-email"></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--gray3)"><a href="https://www.instagram.com/hywn.sh/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">@hywn.sh</a></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  var allPosts = [];       // 전체 게시물 목록 캐시
+  var currentIndex = -1;  // 현재 열린 게시물 인덱스
+
+  // ── 페이지 전환 ──────────────────────────────────────────
+  function go(id, btn) {
+    document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.sb-navbtn').forEach(function (b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    if (id === 'essays') loadPosts();
+    if (id === 'home') loadHomePhotos();
+  }
+
+  var WORKER_URL = 'https://mute-morning-f65d.llorro.workers.dev'; // DB: 21e7f72d
+  var TEN_DAYS = 10 * 24 * 60 * 60 * 1000;
+
+  // ── 노션 API: 게시물 목록 ────────────────────────────────
+  function loadPosts() {
+    var list = document.getElementById('board-list');
+    var loading = document.getElementById('bp-loading');
+    loading.style.display = 'block';
+    list.innerHTML = '';
+    fetch(WORKER_URL)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        loading.style.display = 'none';
+        allPosts = data.posts || [];
+        renderBoard();
+        var hasNew = allPosts.some(function(p) {
+          return p.date && (Date.now() - new Date(p.date).getTime()) < TEN_DAYS;
+        });
+        document.getElementById('nav-new-dot').classList.toggle('visible', hasNew);
+      })
+      .catch(function() {
+        loading.textContent = 'Failed to load.';
+      });
+  }
+
+  function renderBoard() {
+    var list = document.getElementById('board-list');
+    list.innerHTML = '';
+    if (!allPosts.length) {
+      list.innerHTML = '<div class="empty">No pieces yet</div>';
+      return;
+    }
+    allPosts.forEach(function (p, i) {
+      var card = document.createElement('div');
+      card.className = 'bp-card';
+      var fmtDate = p.date ? p.date.replace(/-/g, '.') : '';
+      var thumb = p.cover ? '<img class="bp-thumb" src="' + p.cover + '" alt="" loading="lazy">' : '<div style="width:52px"></div>';
+      card.innerHTML =
+        '<div class="bp-info">' +
+          '<div class="bp-title">' + p.title + (p.cat ? '<span class="bp-cat">[' + p.cat + ']</span>' : '') + '</div>' +
+          '<div class="bp-date">' + fmtDate + '</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end">' + thumb + '</div>';
+      card.addEventListener('click', function () { openPost(i); });
+      list.appendChild(card);
+    });
+  }
+
+  // ── 노션 API: 게시물 본문 ────────────────────────────────
+  function openPost(index) {
+    var p = allPosts[index];
+    if (!p) return;
+    currentIndex = index;
+
+    document.getElementById('pv-meta').textContent = (p.date ? p.date.replace(/-/g, '.') : '') + (p.cat ? ' — ' + p.cat : '');
+    document.getElementById('pv-title').textContent = p.title;
+
+    var coverEl = document.getElementById('pv-cover');
+    coverEl.style.display = 'none';
+    document.getElementById('pv-body').innerHTML = '<div class="bp-loading">Loading...</div>';
+
+    // 이전/다음 버튼
+    var prevPost = allPosts[index - 1];
+    var nextPost = allPosts[index + 1];
+    var btnPrev = document.getElementById('btn-prev');
+    var btnNext = document.getElementById('btn-next');
+    btnPrev.disabled = !prevPost;
+    btnNext.disabled = !nextPost;
+    btnPrev.innerHTML = prevPost ? '← <span class="pv-nav-label">' + prevPost.title + '</span>' : '←';
+    btnNext.innerHTML = nextPost ? '<span class="pv-nav-label">' + nextPost.title + '</span> →' : '→';
+
+    document.querySelectorAll('.page').forEach(function (pg) { pg.classList.remove('active'); });
+    document.getElementById('page-post').classList.add('active');
+    document.querySelectorAll('.sb-navbtn').forEach(function (b) { b.classList.remove('active'); });
+
+    fetch(WORKER_URL + '?id=' + p.id)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var rawHtml = data.html || '<p>No content.</p>';
+        rawHtml = rawHtml.replace(/<p[^>]*>\s*(<br\s*\/?>)?\s*<\/p>/gi, '');
+        rawHtml = rawHtml.replace(/((<li>[\s\S]*?<\/li>\s*)+)/gi, function(m){
+          return '<ul style="margin:0 0 0.6em 1.5em;padding:0;list-style:disc">' + m.trim() + '</ul>';
+        });
+        var bodyEl = document.getElementById('pv-body');
+        bodyEl.innerHTML = rawHtml;
+        // 노션 이미지 인라인 width/style 강제 제거 → CSS가 덮어쓰이도록
+        bodyEl.querySelectorAll('img').forEach(function(img) {
+          // width/height 속성은 유지해서 노션의 원본 크기를 존중
+          img.style.cssText = 'max-width:100%;height:auto;display:block';
+          img.setAttribute('loading', 'lazy');
+        });
+      })
+      .catch(function() {
+        document.getElementById('pv-body').innerHTML = '<p>Failed to load content.</p>';
+      });
+  }
+
+  function loadHomePhotos() {
+    var container = document.getElementById('home-photos');
+    if (!container) return;
+    if (allPosts.length === 0) {
+      fetch(WORKER_URL)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          allPosts = data.posts || [];
+          var hasNew = allPosts.some(function(p) {
+            return p.date && (Date.now() - new Date(p.date).getTime()) < TEN_DAYS;
+          });
+          document.getElementById('nav-new-dot').classList.toggle('visible', hasNew);
+          renderHomePhotos();
+        });
+    } else {
+      renderHomePhotos();
+    }
+  }
+
+  function renderHomePhotos() {
+    var container = document.getElementById('home-photos');
+    if (!container) return;
+    var withPhoto = allPosts.filter(function (p) { return p.cover; });
+    if (!withPhoto.length) { container.style.display = 'none'; return; }
+    // 랜덤 셔플
+    var shuffled = withPhoto.slice().sort(function () { return Math.random() - 0.5; });
+    var shown = shuffled.slice(0, 1);
+    container.innerHTML = '';
+    shown.forEach(function (p) {
+      var idx = allPosts.indexOf(p);
+      var item = document.createElement('div');
+      item.className = 'home-photo-item';
+      item.innerHTML = '<img src="' + p.cover + '" alt="' + p.title + '" loading="lazy"><div class="home-photo-caption">' + p.title + '</div>';
+      item.addEventListener('click', function () { openPost(idx); });
+      container.appendChild(item);
+    });
+  }
+
+  // ── 이벤트 바인딩 ────────────────────────────────────────
+  document.getElementById('btn-nav-home').addEventListener('click', function () { go('home', this); });
+  document.getElementById('btn-nav-essays').addEventListener('click', function () { go('essays', this); });
+  document.getElementById('btn-nav-cv').addEventListener('click', function () { go('cv', this); });
+  document.getElementById('btn-nav-contact').addEventListener('click', function () { go('contact', this); });
+
+  document.getElementById('post-back-btn').addEventListener('click', function () {
+    go('essays', document.getElementById('btn-nav-essays'));
+  });
+  document.getElementById('btn-prev').addEventListener('click', function () {
+    if (currentIndex > 0) openPost(currentIndex - 1);
+  });
+  document.getElementById('btn-next').addEventListener('click', function () {
+    if (currentIndex < allPosts.length - 1) openPost(currentIndex + 1);
+  });
+
+  // email obfuscation
+  var u = 'hiasouth.kr'; var d = 'gmail.com';
+  var el = document.getElementById('contact-email');
+  if (el) { el.textContent = u + '@' + d; }
+
+  // 초기 페이지: Home
+  go('home', document.getElementById('btn-nav-home'));
+});
+</script>
+</body>
+</html>
