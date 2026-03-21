@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hyowon Shim</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K1X1RN2M98"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-K1X1RN2M98');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Lora:ital,wght@0,400;1,400;1,600&family=Noto+Sans+KR:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -113,8 +121,8 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 .pv-body blockquote{border-left:2px solid var(--gray4);padding-left:1.2rem;color:var(--gray3);margin:1.5em 0;font-style:italic}
 .pv-body hr{border:none;border-top:var(--border);margin:2em 0}
 .pv-body figure{margin:2em 0}
-.pv-body figure img{max-width:100%;display:block}
-.pv-body img{max-width:100%;height:auto;display:block}
+.pv-body figure img{max-width:100% !important;width:100% !important;display:block}
+.pv-body img{max-width:100% !important;width:100% !important;height:auto !important;display:block}
 .pv-body figcaption{font-family:var(--mono);font-size:9px;color:var(--gray3);margin-top:.5rem}
 .pv-body a{color:inherit;border-bottom:1px solid var(--gray4)}
 .pv-body strong{font-weight:600}
@@ -431,8 +439,9 @@ document.addEventListener('DOMContentLoaded', function () {
         bodyEl.innerHTML = rawHtml;
         // 노션 이미지 인라인 width/style 강제 제거 → CSS가 덮어쓰이도록
         bodyEl.querySelectorAll('img').forEach(function(img) {
-          // width/height 속성은 유지해서 노션의 원본 크기를 존중
-          img.style.cssText = 'max-width:100%;height:auto;display:block';
+          img.removeAttribute('width');
+          img.removeAttribute('height');
+          img.style.cssText = 'max-width:100% !important;width:100% !important;height:auto !important;display:block !important';
           img.setAttribute('loading', 'lazy');
         });
       })
