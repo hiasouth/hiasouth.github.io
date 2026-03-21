@@ -437,8 +437,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         var bodyEl = document.getElementById('pv-body');
         bodyEl.innerHTML = rawHtml;
+        // 노션 이미지 인라인 width/style 강제 제거 → CSS가 덮어쓰이도록
         bodyEl.querySelectorAll('img').forEach(function(img) {
-          img.removeAttribute('style');
+          img.style.cssText = 'max-width:100%;height:auto;display:block';
           img.setAttribute('loading', 'lazy');
         });
       })
