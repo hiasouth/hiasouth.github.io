@@ -57,11 +57,16 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 .board-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;max-width:780px}
 .board-title{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--black)}
 .board-title em{font-style:italic;font-weight:600}
-.back-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray3);padding:0;margin-bottom:2.5rem;display:flex;align-items:center;gap:.5rem;transition:color .15s}
+.pv-date-footer{display:flex;align-items:center;justify-content:space-between;max-width:580px;margin-top:2rem;font-family:var(--mono);font-size:9px;letter-spacing:.08em}
+.pv-footer-right{display:flex;align-items:center;gap:.75rem}
+.back-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray3);padding:0;display:flex;align-items:center;gap:.5rem;transition:color .15s}
 .back-btn:hover{color:var(--black)}
-.pv-meta{font-family:var(--mono);font-size:9px;color:var(--gray3);letter-spacing:.08em;margin-bottom:.9rem}
-.pv-title{font-family:var(--sans);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.25;margin-bottom:2.5rem;max-width:620px;color:#3a3a3a}
-.pv-divider{height:1px;background:var(--gray5);margin-bottom:2.5rem;max-width:620px}
+.pv-meta{display:none}
+.pv-title{font-family:var(--sans);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.25;margin-bottom:2rem;max-width:620px;color:#3a3a3a}
+.pv-divider{display:none}
+.pv-date-footer{display:flex;align-items:center;justify-content:space-between;max-width:580px;margin-top:2rem;font-family:var(--mono);font-size:9px;letter-spacing:.08em}
+.pv-footer-tag{background:rgba(74,222,128,.18);color:var(--gray2);padding:.2em .55em;letter-spacing:.08em;font-size:8px;text-transform:uppercase}
+.pv-footer-date{color:var(--gray4)}
 .pv-body{font-family:var(--kr);font-size:15px;line-height:1.5;color:#4a4a4a;max-width:580px;white-space:pre-wrap}
 .pv-actions{margin-top:3rem;padding-top:1.75rem;display:flex;gap:.75rem;max-width:580px}
 .btn-del{background:none;border:1px solid var(--gray5);padding:.45rem 1rem;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray3);cursor:pointer;transition:border-color .15s,color .15s}
@@ -120,7 +125,7 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 .pv-body h1{font-size:18px}.pv-body h2{font-size:15px}.pv-body h3{font-size:13px}
 .pv-body blockquote{border-left:2px solid var(--gray4);padding-left:1.2rem;color:var(--gray3);margin:1.5em 0;font-style:italic}
 .pv-body hr{border:none;border-top:var(--border);margin:2em 0}
-.pv-body figure{margin:2em 0}
+.pv-body figure{margin:0.75em 0}
 .pv-body figure img{max-width:100%;display:block}
 .pv-body img{max-width:100%;height:auto;display:block}
 .pv-body figcaption{font-family:var(--mono);font-size:9px;color:var(--gray3);margin-top:.5rem}
@@ -133,6 +138,9 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 .pv-nav-btn:disabled{opacity:.25;cursor:default}
 .pv-nav-label{font-family:var(--sans);font-size:11px;font-weight:500;color:inherit;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bp-loading{font-family:var(--mono);font-size:9px;color:var(--gray4);letter-spacing:.1em;text-transform:uppercase;padding:3rem 0}
+
+.pv-footer-tag{cursor:pointer;transition:opacity .15s}
+.pv-footer-tag:hover{opacity:.65}
 
 /* ── 홈 랜덤 이미지 ── */
 .home-photos{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
@@ -212,12 +220,14 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 
       <!-- POST VIEW -->
       <div class="page" id="page-post">
-        <button class="back-btn" id="post-back-btn">← Back</button>
         <div class="pv-meta" id="pv-meta"></div>
         <div class="pv-title" id="pv-title"></div>
         <img class="pv-cover" id="pv-cover" src="" alt="" loading="lazy" style="display:none">
         <div class="pv-divider"></div>
         <div class="pv-body" id="pv-body"><div class="bp-loading">Loading...</div></div>
+        <div class="pv-date-footer" id="pv-date-footer">
+          <button class="back-btn" id="post-back-btn">← Back</button>
+        </div>
         <nav class="pv-nav" id="pv-nav">
           <button class="pv-nav-btn" id="btn-prev">← Next</button>
           <button class="pv-nav-btn" id="btn-next">Prev →</button>
@@ -339,16 +349,16 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  var allPosts = [];       // 전체 게시물 목록 캐시
-  var currentIndex = -1;  // 현재 열린 게시물 인덱스
+  var allPosts = [];
+  var currentIndex = -1;
+  var activeTag = null;
 
-  // ── 페이지 전환 ──────────────────────────────────────────
   function go(id, btn) {
     document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
     document.getElementById('page-' + id).classList.add('active');
     document.querySelectorAll('.sb-navbtn').forEach(function (b) { b.classList.remove('active'); });
     if (btn) btn.classList.add('active');
-    if (id === 'essays') loadPosts();
+    if (id === 'essays') { activeTag = null; loadPosts(); }
     if (id === 'home') loadHomePhotos();
   }
 
@@ -380,11 +390,13 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderBoard() {
     var list = document.getElementById('board-list');
     list.innerHTML = '';
-    if (!allPosts.length) {
+    var posts = activeTag ? allPosts.filter(function(p) { return p.cat === activeTag; }) : allPosts;
+    if (!posts.length) {
       list.innerHTML = '<div class="empty">No pieces yet</div>';
       return;
     }
-    allPosts.forEach(function (p, i) {
+    posts.forEach(function (p) {
+      var i = allPosts.indexOf(p);
       var card = document.createElement('div');
       card.className = 'bp-card';
       var fmtDate = p.date ? p.date.replace(/-/g, '.') : '';
@@ -406,8 +418,32 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!p) return;
     currentIndex = index;
 
-    document.getElementById('pv-meta').textContent = (p.date ? p.date.replace(/-/g, '.') : '') + (p.cat ? ' — ' + p.cat : '');
+    document.getElementById('pv-meta').textContent = '';
     document.getElementById('pv-title').textContent = p.title;
+    var dateFooter = document.getElementById('pv-date-footer');
+    var tagHtml = p.cat ? '<span class="pv-footer-tag" id="pv-footer-tag-el">' + p.cat + '</span>' : '';
+    var dateHtml = p.date ? '<span class="pv-footer-date">' + p.date.replace(/-/g, '.') + '</span>' : '';
+    dateFooter.innerHTML =
+      '<button class="back-btn" id="post-back-btn">← Back</button>' +
+      '<div class="pv-footer-right">' + tagHtml + dateHtml + '</div>';
+    document.getElementById('post-back-btn').addEventListener('click', function () {
+      // activeTag 유지한 채로 essays 페이지로 이동
+      document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
+      document.getElementById('page-essays').classList.add('active');
+      document.querySelectorAll('.sb-navbtn').forEach(function(b) { b.classList.remove('active'); });
+      document.getElementById('btn-nav-essays').classList.add('active');
+      loadPosts();
+    });
+    if (p.cat) {
+      document.getElementById('pv-footer-tag-el').addEventListener('click', function() {
+        activeTag = p.cat;
+        document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
+        document.getElementById('page-essays').classList.add('active');
+        document.querySelectorAll('.sb-navbtn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('btn-nav-essays').classList.add('active');
+        loadPosts();
+      });
+    }
 
     var coverEl = document.getElementById('pv-cover');
     coverEl.style.display = 'none';
@@ -491,10 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('btn-nav-essays').addEventListener('click', function () { go('essays', this); });
   document.getElementById('btn-nav-cv').addEventListener('click', function () { go('cv', this); });
   document.getElementById('btn-nav-contact').addEventListener('click', function () { go('contact', this); });
-
-  document.getElementById('post-back-btn').addEventListener('click', function () {
-    go('essays', document.getElementById('btn-nav-essays'));
-  });
   document.getElementById('btn-prev').addEventListener('click', function () {
     if (currentIndex > 0) openPost(currentIndex - 1);
   });
