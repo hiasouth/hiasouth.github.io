@@ -139,6 +139,21 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
 .pv-nav-label{font-family:var(--sans);font-size:11px;font-weight:500;color:inherit;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bp-loading{font-family:var(--mono);font-size:9px;color:var(--gray4);letter-spacing:.1em;text-transform:uppercase;padding:3rem 0}
 
+/* ── 툴바 (줄수 선택) ── */
+.bp-toolbar{display:flex;align-items:center;gap:.3rem;margin-bottom:1.25rem;max-width:780px}
+.bp-toolbar-label{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray4);margin-right:.4rem}
+.bp-perpage-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:var(--gray3);padding:.2em .5em;transition:color .15s}
+.bp-perpage-btn:hover{color:var(--black)}
+.bp-perpage-btn.active{color:var(--black);border-bottom:1px solid var(--black)}
+.bp-perpage-sep{font-family:var(--mono);font-size:8px;color:var(--gray5)}
+
+/* ── 페이지네이션 ── */
+.bp-pagination{display:flex;align-items:center;gap:.15rem;margin-top:1.5rem;max-width:780px}
+.bp-page-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--gray3);padding:.35em .6em;transition:color .15s,background .15s;min-width:28px;text-align:center}
+.bp-page-btn:hover{color:var(--black);background:var(--gray6)}
+.bp-page-btn.active{color:var(--black);font-weight:700;background:var(--gray6)}
+.bp-page-btn:disabled{opacity:.25;cursor:default;background:none}
+
 .pv-footer-tag{cursor:pointer;transition:opacity .15s}
 .pv-footer-tag:hover{opacity:.65}
 
@@ -212,8 +227,10 @@ html,body{height:100%;background:var(--white);color:var(--black);font-family:var
       <!-- BITS & PIECES -->
       <div class="page" id="page-essays">
         <div id="bp-loading" class="bp-loading">Loading...</div>
+        <div id="bp-toolbar" class="bp-toolbar" style="display:none"></div>
         <div id="board-list" class="bp-list"></div>
-        <div style="margin-top:4rem;padding-top:1.5rem;font-family:var(--mono);font-size:8px;color:var(--gray4);letter-spacing:.04em;line-height:1.8;max-width:780px">
+        <div id="bp-pagination" class="bp-pagination"></div>
+        <div style="margin-top:2rem;padding-top:1.5rem;font-family:var(--mono);font-size:8px;color:var(--gray4);letter-spacing:.04em;line-height:1.8;max-width:780px">
           &copy; 2026 Hyowon Shim (Hia South). All rights reserved.
         </div>
       </div>
@@ -353,13 +370,57 @@ document.addEventListener('DOMContentLoaded', function () {
   var currentIndex = -1;
   var activeTag = null;
 
-  function go(id, btn) {
-    document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+  // ── Hash 라우터 ──────────────────────────────────────────
+  function setHash(hash, replace) {
+    if (replace) history.replaceState(null, '', '#' + hash);
+    else history.pushState(null, '', '#' + hash);
+  }
+
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('page-' + id).classList.add('active');
-    document.querySelectorAll('.sb-navbtn').forEach(function (b) { b.classList.remove('active'); });
-    if (btn) btn.classList.add('active');
-    if (id === 'essays') { activeTag = null; loadPosts(); }
+    document.querySelectorAll('.sb-navbtn').forEach(function(b) { b.classList.remove('active'); });
+    var navMap = {home:'btn-nav-home', essays:'btn-nav-essays', post:'btn-nav-essays', cv:'btn-nav-cv', contact:'btn-nav-contact'};
+    if (navMap[id]) document.getElementById(navMap[id]).classList.add('active');
     if (id === 'home') loadHomePhotos();
+  }
+
+  function go(id, opts) {
+    opts = opts || {};
+    var hash = id;
+    if (opts.postIndex !== undefined) hash = 'post-' + opts.postIndex;
+    if (opts.tag) hash = 'essays-tag-' + encodeURIComponent(opts.tag);
+    setHash(hash, opts.replace);
+    route(hash);
+  }
+
+  function route(hash) {
+    hash = hash || (window.location.hash.slice(1) || 'home');
+    if (!hash || hash === 'home') {
+      showPage('home');
+    } else if (hash === 'essays') {
+      activeTag = null; currentPage = 1;
+      showPage('essays'); loadPosts();
+    } else if (hash.indexOf('essays-tag-') === 0) {
+      activeTag = decodeURIComponent(hash.slice('essays-tag-'.length));
+      currentPage = 1; showPage('essays'); loadPosts();
+    } else if (hash.indexOf('post-') === 0) {
+      var idx = parseInt(hash.slice(5));
+      if (!isNaN(idx)) ensurePosts(function() { openPost(idx); });
+    } else if (hash === 'cv') {
+      showPage('cv');
+    } else if (hash === 'contact') {
+      showPage('contact');
+    } else {
+      showPage('home');
+    }
+  }
+
+  function ensurePosts(cb) {
+    if (allPosts.length) { cb(); return; }
+    fetch(WORKER_URL).then(function(r){return r.json();}).then(function(data){
+      allPosts = data.posts || []; cb();
+    });
   }
 
   var WORKER_URL = 'https://mute-morning-f65d.llorro.workers.dev'; // DB: 21e7f72d
@@ -376,6 +437,8 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function(data) {
         loading.style.display = 'none';
         allPosts = data.posts || [];
+        currentPage = 1;
+        renderToolbar();
         renderBoard();
         var hasNew = allPosts.some(function(p) {
           return p.date && (Date.now() - new Date(p.date).getTime()) < TEN_DAYS;
@@ -387,15 +450,43 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  var currentPage = 1;
+  var perPage = 10;
+
+  function renderToolbar() {
+    var toolbar = document.getElementById('bp-toolbar');
+    toolbar.style.display = 'flex';
+    toolbar.innerHTML =
+      '<span class="bp-toolbar-label">Show</span>' +
+      [10, 20, 50].map(function(n) {
+        return '<button class="bp-perpage-btn' + (perPage === n ? ' active' : '') + '">' + n + '</button>';
+      }).join('<span class="bp-perpage-sep">/</span>');
+    toolbar.querySelectorAll('.bp-perpage-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        perPage = parseInt(btn.textContent);
+        currentPage = 1;
+        renderToolbar();
+        renderBoard();
+      });
+    });
+  }
+
   function renderBoard() {
     var list = document.getElementById('board-list');
+    var pagination = document.getElementById('bp-pagination');
     list.innerHTML = '';
+    pagination.innerHTML = '';
     var posts = activeTag ? allPosts.filter(function(p) { return p.cat === activeTag; }) : allPosts;
     if (!posts.length) {
       list.innerHTML = '<div class="empty">No pieces yet</div>';
       return;
     }
-    posts.forEach(function (p) {
+    var totalPages = Math.ceil(posts.length / perPage);
+    if (currentPage > totalPages) currentPage = 1;
+    var start = (currentPage - 1) * perPage;
+    var pagePosts = posts.slice(start, start + perPage);
+
+    pagePosts.forEach(function (p) {
       var i = allPosts.indexOf(p);
       var card = document.createElement('div');
       card.className = 'bp-card';
@@ -410,6 +501,23 @@ document.addEventListener('DOMContentLoaded', function () {
       card.addEventListener('click', function () { openPost(i); });
       list.appendChild(card);
     });
+
+    // 페이지네이션 렌더
+    if (totalPages > 1) {
+      for (var pg = 1; pg <= totalPages; pg++) {
+        (function(n) {
+          var btn = document.createElement('button');
+          btn.className = 'bp-page-btn' + (currentPage === n ? ' active' : '');
+          btn.textContent = n;
+          btn.addEventListener('click', function() {
+            currentPage = n;
+            renderBoard();
+            document.getElementById('page-essays').scrollTop = 0;
+          });
+          pagination.appendChild(btn);
+        })(pg);
+      }
+    }
   }
 
   // ── 노션 API: 게시물 본문 ────────────────────────────────
@@ -417,6 +525,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var p = allPosts[index];
     if (!p) return;
     currentIndex = index;
+
+    // hash 설정 (이미 post-N이면 replace, 아니면 push)
+    var curHash = window.location.hash.slice(1);
+    var targetHash = 'post-' + index;
+    if (curHash !== targetHash) setHash(targetHash);
 
     document.getElementById('pv-meta').textContent = '';
     document.getElementById('pv-title').textContent = p.title;
@@ -427,21 +540,12 @@ document.addEventListener('DOMContentLoaded', function () {
       '<button class="back-btn" id="post-back-btn">← Back</button>' +
       '<div class="pv-footer-right">' + tagHtml + dateHtml + '</div>';
     document.getElementById('post-back-btn').addEventListener('click', function () {
-      // activeTag 유지한 채로 essays 페이지로 이동
-      document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
-      document.getElementById('page-essays').classList.add('active');
-      document.querySelectorAll('.sb-navbtn').forEach(function(b) { b.classList.remove('active'); });
-      document.getElementById('btn-nav-essays').classList.add('active');
-      loadPosts();
+      var backHash = activeTag ? 'essays-tag-' + encodeURIComponent(activeTag) : 'essays';
+      go(backHash);
     });
     if (p.cat) {
       document.getElementById('pv-footer-tag-el').addEventListener('click', function() {
-        activeTag = p.cat;
-        document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
-        document.getElementById('page-essays').classList.add('active');
-        document.querySelectorAll('.sb-navbtn').forEach(function(b) { b.classList.remove('active'); });
-        document.getElementById('btn-nav-essays').classList.add('active');
-        loadPosts();
+        go('essays', {tag: p.cat});
       });
     }
 
@@ -461,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.page').forEach(function (pg) { pg.classList.remove('active'); });
     document.getElementById('page-post').classList.add('active');
-    document.querySelectorAll('.sb-navbtn').forEach(function (b) { b.classList.remove('active'); });
+    document.getElementById('btn-nav-essays').classList.add('active');
 
     fetch(WORKER_URL + '?id=' + p.id)
       .then(function(r) { return r.json(); })
@@ -523,15 +627,20 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── 이벤트 바인딩 ────────────────────────────────────────
-  document.getElementById('btn-nav-home').addEventListener('click', function () { go('home', this); });
-  document.getElementById('btn-nav-essays').addEventListener('click', function () { go('essays', this); });
-  document.getElementById('btn-nav-cv').addEventListener('click', function () { go('cv', this); });
-  document.getElementById('btn-nav-contact').addEventListener('click', function () { go('contact', this); });
+  document.getElementById('btn-nav-home').addEventListener('click', function () { go('home'); });
+  document.getElementById('btn-nav-essays').addEventListener('click', function () { go('essays'); });
+  document.getElementById('btn-nav-cv').addEventListener('click', function () { go('cv'); });
+  document.getElementById('btn-nav-contact').addEventListener('click', function () { go('contact'); });
   document.getElementById('btn-prev').addEventListener('click', function () {
-    if (currentIndex > 0) openPost(currentIndex - 1);
+    if (currentIndex > 0) go('', {postIndex: currentIndex - 1});
   });
   document.getElementById('btn-next').addEventListener('click', function () {
-    if (currentIndex < allPosts.length - 1) openPost(currentIndex + 1);
+    if (currentIndex < allPosts.length - 1) go('', {postIndex: currentIndex + 1});
+  });
+
+  // 브라우저 앞/뒤로 가기
+  window.addEventListener('popstate', function () {
+    route(window.location.hash.slice(1) || 'home');
   });
 
   // email obfuscation
@@ -539,8 +648,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('contact-email');
   if (el) { el.textContent = u + '@' + d; }
 
-  // 초기 페이지: Home
-  go('home', document.getElementById('btn-nav-home'));
+  // 초기 라우팅
+  var initHash = window.location.hash.slice(1) || 'home';
+  setHash(initHash, true);
+  route(initHash);
 });
 </script>
 </body>
